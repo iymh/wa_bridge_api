@@ -1,0 +1,27 @@
+{
+  "name": "wa_bridge",
+  "version": "0.1.0",
+  "description": "A pretty simple node.js application. Gotta start some place.",
+  "main": "server.js",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "ibm-watson": "^8.0.0",
+    "nodemon": "^3.0.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iymh/wa_bridge_api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iymh/wa_bridge_api/issues"
+  },
+  "homepage": "https://github.com/iymh/wa_bridge_api#readme"
+}

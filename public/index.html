@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watson Assistant Test</title>
+  <style>
+    [v-cloak] {
+      display: none;
+    }
+    .wdt2 {
+      width: 2rem;
+    }
+    .wdt5 {
+      width: 5rem;
+    }
+    .wdt10 {
+      width: 10rem;
+    }
+    .wdt12 {
+      width: 12rem;
+    }
+    .ws-preline {
+      white-space: pre-line;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" v-cloak>
+    <v-app>
+      <v-app-bar app>
+        <v-app-bar-title>Watson Assistant Test</v-app-bar-title>
+        <v-spacer></v-spacer>
+      </v-app-bar>
+
+      <!-- Toast Component -->
+      <v-snackbar
+        v-model="toast.show"
+        bottom
+        multi-line
+        :timeout="toast.timeout"
+        :color="toast.type"
+        @click="toast.show = false">
+        <div class="rw">{{ toast.text }}</div>
+      </v-snackbar>
+
+      <v-main>
+        <v-container>
+
+          <v-divider></v-divider>
+          <div class="ma-2">
+            <v-row class="justify-center align-center ma-3">
+              <v-combobox
+                class="flex-grow-1 ma_lr_1rem ma_tp_05rem"
+                v-model="inputmsg"
+                :items="inputmsg_items"
+                label="Send Assistant Message"
+                outlined
+                clearable
+                counter
+                dense
+                rows="1"
+              ></v-combobox>
+            </v-row>
+
+            <v-row class="justify-center align-center ma-3">
+              <v-combobox
+                class="wdt12"
+                label="AssistantID"
+                outlined
+                dense
+                v-model="assistantid"
+                rows="1"
+                hide-details
+              ></v-combobox>
+              <v-btn 
+                tile color="primary"
+                elevation="1"
+                rounded
+                :loading="isLoading"
+                @click="sendMessage()">
+                <v-icon left>mdi-card-search-outline</v-icon>
+                <span>Search</span>
+              </v-btn>
+            </v-row>
+          </div>
+
+          <v-divider></v-divider>
+          <div class="ma-2">
+            <v-row class="justify-center">
+              <div class="flex-grow-1">
+                <div class="ma-5">
+                  <div class="text-h5 primary--text">WD Results</div>
+                  <div class="ws-preline" v-if="output_json?.context?.skills">
+                    <div class="" v-if="output_json.context.skills['actions skill']">
+                      {{ output_json.context.skills['actions skill'].skill_variables.passages }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ma-5">
+                  <div class="text-h5 primary--text">Model Inputs</div>
+                  <div class="ws-preline" v-if="output_json?.context?.skills">
+                    <div class="" v-if="output_json.context.skills['actions skill']">
+                      <div class="primary--text">{{ output_json.context.skills['actions skill'].skill_variables.model_id }}</div>
+                      <div>{{ output_json.context.skills['actions skill'].skill_variables.model_input }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ma-5">
+                  <div class="text-h5 primary--text">Result Text</div>
+                  <div class="ws-preline" v-if="output_json?.output?.generic">
+                    <div class="primary lighten-5" v-for="item in output_json.output.generic">{{ item.text }}</div>
+                  </div>
+                </div>
+
+                </div>
+              </div>
+            </v-row>
+          </div>
+
+        </v-container>
+      </v-main>
+    </v-app>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+
+  <script type="module">
+    const LOCAL_URL = "./";
+
+    new Vue({
+      el: '#app',
+      vuetify: new Vuetify(),
+
+      data:() => ({
+        // components
+        toast:{
+          show: false,
+          timeout: 5000,
+          type: "primary",
+          text:""
+        },
+
+        assistantid: "c97a7197-0ef2-434b-bb1e-1ddb6b41358d",
+        // assistantid: "9cf19bd3-3a54-4043-aa18-937711bf5d15",
+        inputmsg: "",
+        inputmsg_items:[
+          "t検定の方法は？", "クロス集計表のセル表示を指定するには", "一元配置分散分析とは？", 
+        ],
+
+        isLoading: false,
+        output_json: [],
+      }),
+
+      watch: {
+        dc_project_selected: function(pid) {
+          console.log("[dc_projects_selected] change", pid.project_id);
+          let param = JSON.parse(this.dc_paramjson);
+          param.projectId = pid.project_id;
+          this.dc_paramjson = JSON.stringify(param);
+
+          this.listCollections();
+        },
+
+        dc_collections_selected: function(cids) {
+          console.log("[dc_collections_selected] change", cids);
+          let param = JSON.parse(this.dc_paramjson);
+          param.collectionIds = cids.map(c => c.collection_id);
+          this.dc_paramjson = JSON.stringify(param);
+        },
+
+        dc_isAF: function(onoff) {
+          console.log("[dc_isAF] change", onoff);
+          let param = JSON.parse(this.dc_paramjson);
+          param.passages.find_answers = onoff;
+          this.dc_paramjson = JSON.stringify(param);
+        }
+      },
+
+      methods: {
+        // components
+        showToast(msg) {
+          this.toast.text = msg;
+          this.toast.show = true;
+        },
+
+        // Send Request
+        async callapi(method, api, params) {
+          console.log("[callapi]", api);
+
+          console.log("fetch start");
+          let res = await fetch(`${LOCAL_URL}api`, {
+            method: method,
+            // mode: "cors",
+            // cache: "no-cache",
+            headers: {
+              "Content-Type": "application/json",
+              // 'Authorization': 'Basic ' + btoa('test' + ":" + 'test')
+            },
+            body: JSON.stringify({
+              "api":api,
+              "params":params}
+            )
+          });
+          console.log("fetch end", res);
+          if (!res.ok) {
+            throw new Error(`status = ${res.status}, statusText = ${res.statusText}`);
+          } 
+          const jsondata = await res.json();
+          // console.log("jsondata : " + JSON.stringify(jsondata));
+          return jsondata;
+        },
+
+        async sendMessage(showtoast) {
+          console.log("[sendMessage]");
+
+          // clear views
+          this.output_json = [];
+
+          let prm = {
+            assistantId: this.assistantid,
+            input:{
+              "message_type": "text",
+              "text": this.inputmsg
+            }
+          }
+
+          this.isLoading = true;
+
+          let ret = true;
+          let ret_json = await this.callapi("POST", "messageStateless", prm);
+          if (ret_json) {
+            console.log(ret_json);
+            this.output_json = ret_json;
+            if (showtoast) this.showToast("データの取得が完了しました");
+          } else {
+            if (showtoast) this.showToast("データの取得が失敗しました");
+            ret = false;
+          }
+          this.isLoading = false;
+          return ret;
+        },
+
+      },
+      mounted() {
+        console.log("vue mounted.");
+
+        // set Default
+        this.inputmsg = this.inputmsg_items[0];
+      }
+    })
+
+  </script>
+</body>
+
+</html>
