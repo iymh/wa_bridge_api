@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watson Assistant Test</title>
+  <style>
+    [v-cloak] {
+      display: none;
+    }
+    .hide {
+      display: none;
+    }
+    .wdt2 {
+      width: 2rem;
+    }
+    .wdt5 {
+      width: 5rem;
+    }
+    .wdt10 {
+      width: 10rem;
+    }
+    .wdt12 {
+      width: 12rem;
+    }
+    .ws-preline {
+      white-space: pre-line;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" v-cloak>
+    <v-app>
+      <v-app-bar app>
+        <v-app-bar-title>Watson Assistant Test</v-app-bar-title>
+        <v-spacer></v-spacer>
+      </v-app-bar>
+
+      <!-- Toast Component -->
+      <v-snackbar
+        v-model="toast.show"
+        bottom
+        multi-line
+        :timeout="toast.timeout"
+        :color="toast.type"
+        @click="toast.show = false">
+        <div class="rw">{{ toast.text }}</div>
+      </v-snackbar>
+
+      <v-main>
+        <v-container>
+
+          <v-divider></v-divider>
+          <div class="ma-2">
+
+            <div>
+              <v-file-input 
+                show-size
+                label="CSV File"
+                accept="text/csv"
+                hide-details
+                @change="onFileChange"
+              ></v-file-input>
+            </div>
+
+            <v-divider></v-divider>
+
+            <v-row class="justify-center align-center ma-3">
+              <div class="ma-5">
+                <div>count: {{ import_count }}</div>
+              </div>
+
+              <v-btn 
+                tile color="primary"
+                elevation="1"
+                rounded
+                :loading="isLoading"
+                :class="[(import_count > 0) ? '': 'hide']"
+                @click="execAllTest()">
+                <v-icon left>mdi-card-search-outline</v-icon>
+                <span>All Test</span>
+              </v-btn>
+
+              <v-btn color="secondary"
+                icon elevation="1"
+                :class="[(import_count > 0) ? '': 'hide']"
+                @click="createJSONfile()">
+                <v-icon>mdi-file-code-outline</v-icon>
+              </v-btn>
+
+              <v-btn color="secondary"
+                icon elevation="1"
+                :class="[(import_count > 0) ? '': 'hide']"
+                @click="createXlSXfile()">
+                <v-icon>mdi-file-table-outline</v-icon>
+              </v-btn>
+            </v-row>
+
+            <v-divider></v-divider>
+
+            <div class="ma-2" v-if="isLoading">
+              <v-progress-linear v-model="all_progress"></v-progress-linear>
+            </div>
+
+            <div>
+              <v-data-table
+                height="70vh"
+                :headers = "tbl_headers"
+                :items = "import_jsons"
+                :loading = "tbl_loading"
+                disable-pagination
+                :items-per-page="200"
+                no-data-text="データがありません"
+                fixed-header
+                hide-default-footer
+              >
+                <template v-slot:[`item`]="{ item, index }">
+                  <tr>
+                    <td class="align-content-start">
+                      <div>{{item.no}}</div>
+                    </td>
+                    <td class="align-content-start">
+                      <div v-if="item.question">{{item.question}}</div>
+                    </td>
+                    <td class="align-content-start">
+                      <div v-if="item.answer">{{item.answer}}</div>
+                    </td>
+                    <td class="align-content-start">
+                      <div v-if="item.generated_answer">{{item.generated_answer}}</div>
+                    </td>
+                    <td class="align-content-start" :class="checkScoreColor(item?.generated_score)">
+                      <div v-if="item.generated_score">{{ (item.generated_score * 100).toFixed(2)}}</div>
+                    </td>
+                  </tr>
+                </template>
+              </v-data-table>
+            </div>
+
+
+            <!-- <v-row class="justify-center align-center ma-3">
+              <v-combobox
+                class="flex-grow-1 ma_lr_1rem ma_tp_05rem"
+                v-model="inputmsg"
+                :items="inputmsg_items"
+                label="Send Assistant Message"
+                outlined
+                clearable
+                counter
+                dense
+                rows="1"
+              ></v-combobox>
+            </v-row>
+
+            <v-row class="justify-center align-center ma-3">
+              <v-combobox
+                class="wdt12"
+                label="AssistantID"
+                outlined
+                dense
+                v-model="assistantid"
+                rows="1"
+                hide-details
+              ></v-combobox>
+              <v-btn 
+                tile color="primary"
+                elevation="1"
+                rounded
+                :loading="isLoading"
+                @click="sendMessage()">
+                <v-icon left>mdi-card-search-outline</v-icon>
+                <span>Search</span>
+              </v-btn>
+            </v-row> -->
+          </div>
+
+          <!-- <v-divider></v-divider>
+          <div class="ma-2">
+            <v-row class="justify-center">
+              <div class="flex-grow-1">
+                <div class="ma-5">
+                  <div class="text-h5 primary--text">WD Results</div>
+                  <div class="ws-preline" v-if="output_json?.context?.skills">
+                    <div class="" v-if="output_json.context.skills['actions skill']">
+                      {{ output_json.context.skills['actions skill'].skill_variables.passages }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ma-5">
+                  <div class="text-h5 primary--text">Model Inputs</div>
+                  <div class="ws-preline" v-if="output_json?.context?.skills">
+                    <div class="" v-if="output_json.context.skills['actions skill']">
+                      <div class="primary--text">{{ output_json.context.skills['actions skill'].skill_variables.model_id }}</div>
+                      <div>{{ output_json.context.skills['actions skill'].skill_variables.model_input }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ma-5">
+                  <div class="text-h5 primary--text">Result Text</div>
+                  <div class="ws-preline" v-if="output_json?.output?.generic">
+                    <div class="primary lighten-5" v-for="item in output_json.output.generic" v-html="item.text"></div>
+                  </div>
+                </div>
+
+                </div>
+              </div>
+            </v-row>
+          </div> -->
+
+        </v-container>
+      </v-main>
+    </v-app>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script type="module">
+    const LOCAL_URL = "./";
+
+    new Vue({
+      el: '#app',
+      vuetify: new Vuetify(),
+
+      data:() => ({
+        // components
+        toast:{
+          show: false,
+          timeout: 5000,
+          type: "primary",
+          text:""
+        },
+
+        assistantid: "c97a7197-0ef2-434b-bb1e-1ddb6b41358d",
+        // assistantid: "9cf19bd3-3a54-4043-aa18-937711bf5d15",
+        // inputmsg: "",
+        // inputmsg_items:[
+        //   "t検定の方法は？", "クロス集計表のセル表示を指定するには", "一元配置分散分析とは？", 
+        // ],
+
+        isLoading: false,
+        all_progress: 0,
+        output_json: [],
+
+        tbl_loading: false,
+        tbl_headers:[
+          { text:'no', value:'no', width:'3rem', class:"" },
+          { text:'Question', value:'question', width:'8rem', class:"info" },
+          { text:'Human Answer', value:'answer', width:'8rem', class:"info" },
+          { text:'Generated Answer', value:'generated_answer', width:'8rem', class:"blue" },
+          { text:'Generated Score', value:'generated_score', width:'3rem', class:"blue" },
+        ],
+
+        // CSV
+        import_filename: "",
+        import_count: 0,
+        import_jsons: [],
+      }),
+
+      watch: {
+      },
+
+      methods: {
+        // components
+        showToast(msg) {
+          this.toast.text = msg;
+          this.toast.show = true;
+        },
+
+        checkScoreColor(score) {
+          let color = "";
+          score = score * 100;
+          if (score <= 40) {
+            color = "error";
+          } else if (score <= 60) {
+            color = "warning";
+          }
+          return color;
+        },
+
+        setProgress() {
+          let isDoneItems = this.import_jsons.filter(item => item.generated_answer?.length > 0);
+          console.log("[setProgress]", isDoneItems.length);
+          
+          this.all_progress =  (isDoneItems.length / this.import_count) *100;
+        },
+
+        // Send Request
+        async callapi(method, api, params) {
+          console.log("[callapi]", api);
+
+          console.log("fetch start");
+          let res = await fetch(`${LOCAL_URL}api`, {
+            method: method,
+            // mode: "cors",
+            // cache: "no-cache",
+            headers: {
+              "Content-Type": "application/json",
+              // 'Authorization': 'Basic ' + btoa('test' + ":" + 'test')
+            },
+            body: JSON.stringify({
+              "api":api,
+              "params":params}
+            )
+          });
+          console.log("fetch end", res);
+          if (!res.ok) {
+            throw new Error(`status = ${res.status}, statusText = ${res.statusText}`);
+          } 
+          const jsondata = await res.json();
+          // console.log("jsondata : " + JSON.stringify(jsondata));
+          return jsondata;
+        },
+
+        async sendMessage(item) {
+          // console.log("[sendMessage]");
+          let prm = {
+            assistantId: this.assistantid,
+            input:{
+              "message_type": "text",
+              "text": item.question
+            },
+            ref: item.answer
+          }
+
+          let ret_json = await this.callapi("POST", "messageStateless_Score", prm);
+          if (ret_json) {
+            console.log(ret_json);
+            if (ret_json.output?.generic.length > 0) {
+              item["generated_answer"] = ret_json.output.generic[0].text;
+            }
+            if (ret_json.score) {
+              item["generated_score"] = ret_json.score.rouge_l;
+            }
+
+          }
+          this.setProgress();
+          return;
+        },
+
+        async execAllTest() {
+          console.log("[execAllTest]");
+          this.isLoading = true;
+          this.all_progress = 0;
+
+          let execPromises = [];
+          this.import_jsons.forEach(item => {
+            if (item.question?.length > 0) {
+              execPromises.push(this.sendMessage(item));
+            }
+          });
+
+          let all_rets = await Promise.all(execPromises);
+          console.log("[execAllTest] All Done!", all_rets);
+
+          this.isLoading = false;
+          this.showToast("全件 完了しました");
+        },
+
+        // CSV File
+        async onFileChange(file) {
+          console.log("[onFileChange]", file);
+          if (file) {
+            this.import_jsons = await this.readXLSX(file);
+            console.log(this.import_jsons);
+          } else {
+            this.import_jsons = [];
+          }
+          this.import_count = this.import_jsons.length;
+        },
+
+        async getXLSXFromFile(file) {
+          return new Promise((resolve, reject) => {
+            try {
+              const reader = new FileReader();
+              reader.readAsText(file, "utf-8");
+              reader.onload = (event) => resolve(event.target?.result);
+              reader.onerror = (event) => reject(event);
+            } catch (error) {
+              reject(error);
+            }
+          });
+        },
+
+        async readXLSX(file) {
+          console.log("[readXLSX]", file.name);
+          let data = await this.getXLSXFromFile(file);
+
+          var results = [];
+          if (!data) return results;
+
+          this.import_filename = file.name;
+
+          var workbook = XLSX.read(data, {
+            type: 'binary'
+          });
+
+          var firstSheet = workbook.SheetNames[0];
+          workbook.SheetNames.forEach(function(sheetName) {
+            var roa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+              header: 1
+            });
+            // convert xlsx to json
+            if (roa.length) {
+              let headers = roa[0];
+              roa.shift(0); // remove first line as header.
+
+              roa.forEach((row, n) =>{
+                let item = {
+                  "no": n+1
+                };
+                headers.forEach((h,i) =>{
+                  item[h] = row[i] ? row[i] : "";
+                })
+                results.push(item);
+              })
+            }
+          });
+          
+          return results;
+        },
+
+        createXlSXfile() {
+          console.log("[createXlSXfile]", this.import_filename);
+          if (!this.import_filename) return;
+
+          /* generate worksheet and workbook */
+          const worksheet = XLSX.utils.json_to_sheet(this.import_jsons);
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
+          XLSX.writeFile(workbook, `${this.import_filename}.xlsx`, { compression: true });
+        },
+
+        createJSONfile() {
+          console.log("[Import] createJSONfile");
+
+          let blob = new Blob([ JSON.stringify(this.import_jsons) ], {type: 'text/plain'});
+
+          const ele = document.createElement('a');
+          ele.setAttribute('href', window.webkitURL.createObjectURL(blob));
+          ele.setAttribute('download', `${this.import_filename}.json`);
+          ele.style.visibility = 'hidden';
+          document.body.appendChild(ele);
+          ele.click();
+          document.body.removeChild(ele);
+        },
+
+      },
+      mounted() {
+        console.log("vue mounted.");
+
+        // set Default
+      }
+    })
+
+  </script>
+</body>
+
+</html>

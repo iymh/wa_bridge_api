@@ -119,7 +119,7 @@
                 <div class="ma-5">
                   <div class="text-h5 primary--text">Result Text</div>
                   <div class="ws-preline" v-if="output_json?.output?.generic">
-                    <div class="primary lighten-5" v-for="item in output_json.output.generic">{{ item.text }}</div>
+                    <div class="primary lighten-5" v-for="item in output_json.output.generic" v-html="item.text"></div>
                   </div>
                 </div>
 
@@ -164,28 +164,6 @@
       }),
 
       watch: {
-        dc_project_selected: function(pid) {
-          console.log("[dc_projects_selected] change", pid.project_id);
-          let param = JSON.parse(this.dc_paramjson);
-          param.projectId = pid.project_id;
-          this.dc_paramjson = JSON.stringify(param);
-
-          this.listCollections();
-        },
-
-        dc_collections_selected: function(cids) {
-          console.log("[dc_collections_selected] change", cids);
-          let param = JSON.parse(this.dc_paramjson);
-          param.collectionIds = cids.map(c => c.collection_id);
-          this.dc_paramjson = JSON.stringify(param);
-        },
-
-        dc_isAF: function(onoff) {
-          console.log("[dc_isAF] change", onoff);
-          let param = JSON.parse(this.dc_paramjson);
-          param.passages.find_answers = onoff;
-          this.dc_paramjson = JSON.stringify(param);
-        }
       },
 
       methods: {
@@ -233,13 +211,14 @@
             input:{
               "message_type": "text",
               "text": this.inputmsg
-            }
+            },
+            // ref: ""
           }
 
           this.isLoading = true;
 
           let ret = true;
-          let ret_json = await this.callapi("POST", "messageStateless", prm);
+          let ret_json = await this.callapi("POST", "messageStateless_Score", prm);
           if (ret_json) {
             console.log(ret_json);
             this.output_json = ret_json;
