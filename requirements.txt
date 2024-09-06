@@ -6,14 +6,16 @@ click==8.1.7
 colorama==0.4.6
 exceptiongroup==1.2.2
 fastapi==0.112.2
+gunicorn==23.0.0
 h11==0.14.0
 ibm-cloud-sdk-core==3.20.6
 ibm-watson==8.1.0
 idna==3.8
 Janome==0.5.0
-# logging==0.4.9.6
+logging==0.4.9.6
 lxml==5.3.0
 numpy==2.1.1
+packaging==24.1
 plac==1.4.3
 portalocker==2.10.1
 pydantic==2.8.2
