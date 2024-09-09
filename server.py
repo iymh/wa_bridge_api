@@ -25,6 +25,8 @@ from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 WA_VARSION = '2023-06-15'
 api_key = os.getenv("API_KEY", None) 
 api_url = os.getenv("API_BASE_URL", None)
+port = os.getenv("PORT", None)
+print(port)
 
 authenticator = IAMAuthenticator(api_key)
 assistant = AssistantV2(
@@ -95,7 +97,7 @@ app.mount("/", StaticFiles(directory="public",html=True), name="public")
 # server init
 def start():
     logger.info('[start]')
-    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run("server:app", host="0.0.0.0", port=int(port), reload=False)
     # uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
 
 # init from python script
