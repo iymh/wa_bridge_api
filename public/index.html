@@ -96,35 +96,38 @@
           <v-divider></v-divider>
           <div class="ma-2">
             <v-row class="justify-center">
-              <div class="flex-grow-1">
-                <div class="ma-5">
-                  <div class="text-h5 primary--text">WD Results</div>
-                  <div class="ws-preline" v-if="output_json?.context?.skills">
-                    <div class="" v-if="output_json.context.skills['actions skill']">
-                      {{ output_json.context.skills['actions skill'].skill_variables.passages }}
-                    </div>
+              <v-col class="ma-1">
+                <div class="text-h5 primary--text">Discovery結果</div>
+
+                <div class="ws-preline" v-if="output_json?.context?.skills">
+                  <div class="" v-if="output_json.context.skills['actions skill']">
+                    <div class="teal--text">{{ output_json.context.skills['actions skill'].skill_variables.discovery_filename }}</div>
+
+                    <div class="pink--text">{{ output_json.context.skills['actions skill'].skill_variables.passages.length }} 文字</div>
+                    <div class="primary lighten-5">{{ output_json.context.skills['actions skill'].skill_variables.passages }}</div>
                   </div>
                 </div>
+              </v-col>
 
-                <div class="ma-5">
-                  <div class="text-h5 primary--text">Model Inputs</div>
-                  <div class="ws-preline" v-if="output_json?.context?.skills">
-                    <div class="" v-if="output_json.context.skills['actions skill']">
-                      <div class="primary--text">{{ output_json.context.skills['actions skill'].skill_variables.model_id }}</div>
-                      <div>{{ output_json.context.skills['actions skill'].skill_variables.model_input }}</div>
-                    </div>
+              <v-col class="ma-1">
+                <div class="text-h5 primary--text">LLMプロンプト</div>
+                <div class="ws-preline" v-if="output_json?.context?.skills">
+                  <div class="" v-if="output_json.context.skills['actions skill']">
+                    <div class="teal--text">{{ output_json.context.skills['actions skill'].skill_variables.model_id }}</div>
+
+                    <div class="pink--text">{{ output_json.context.skills['actions skill'].skill_variables.model_input.length }} 文字</div>
+                    <div class="purple lighten-5">{{ output_json.context.skills['actions skill'].skill_variables.model_input }}</div>
                   </div>
                 </div>
+              </v-col>
 
-                <div class="ma-5">
-                  <div class="text-h5 primary--text">Result Text</div>
-                  <div class="ws-preline" v-if="output_json?.output?.generic">
-                    <div class="primary lighten-5" v-for="item in output_json.output.generic" v-html="item.text"></div>
-                  </div>
+              <v-col class="ma-1">
+                <div class="text-h5 primary--text">生成回答文</div>
+                <div class="ws-preline" v-if="output_json?.output?.generic">
+                  <div class="pink--text">{{ output_json.output.generic.reduce((acc,str) => acc + str.text.length,0) }} 文字</div>
+                  <div id="out" class="cyan lighten-5" v-for="item in output_json.output.generic" v-html="item.text"></div>
                 </div>
-
-                </div>
-              </div>
+              </v-col>
             </v-row>
           </div>
 
