@@ -84,7 +84,7 @@
                 rounded
                 :loading="isLoading"
                 :class="[(import_count > 0) ? '': 'hide']"
-                @click="execAllTest()">
+                @click="execAllTest_sync()">
                 <v-icon left>mdi-card-search-outline</v-icon>
                 <span>All Test</span>
               </v-btn>
@@ -143,78 +143,7 @@
                 </template>
               </v-data-table>
             </div>
-
-
-            <!-- <v-row class="justify-center align-center ma-3">
-              <v-combobox
-                class="flex-grow-1 ma_lr_1rem ma_tp_05rem"
-                v-model="inputmsg"
-                :items="inputmsg_items"
-                label="Send Assistant Message"
-                outlined
-                clearable
-                counter
-                dense
-                rows="1"
-              ></v-combobox>
-            </v-row>
-
-            <v-row class="justify-center align-center ma-3">
-              <v-combobox
-                class="wdt12"
-                label="AssistantID"
-                outlined
-                dense
-                v-model="assistantid"
-                rows="1"
-                hide-details
-              ></v-combobox>
-              <v-btn 
-                tile color="primary"
-                elevation="1"
-                rounded
-                :loading="isLoading"
-                @click="sendMessage()">
-                <v-icon left>mdi-card-search-outline</v-icon>
-                <span>Search</span>
-              </v-btn>
-            </v-row> -->
           </div>
-
-          <!-- <v-divider></v-divider>
-          <div class="ma-2">
-            <v-row class="justify-center">
-              <div class="flex-grow-1">
-                <div class="ma-5">
-                  <div class="text-h5 primary--text">WD Results</div>
-                  <div class="ws-preline" v-if="output_json?.context?.skills">
-                    <div class="" v-if="output_json.context.skills['actions skill']">
-                      {{ output_json.context.skills['actions skill'].skill_variables.passages }}
-                    </div>
-                  </div>
-                </div>
-
-                <div class="ma-5">
-                  <div class="text-h5 primary--text">Model Inputs</div>
-                  <div class="ws-preline" v-if="output_json?.context?.skills">
-                    <div class="" v-if="output_json.context.skills['actions skill']">
-                      <div class="primary--text">{{ output_json.context.skills['actions skill'].skill_variables.model_id }}</div>
-                      <div>{{ output_json.context.skills['actions skill'].skill_variables.model_input }}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="ma-5">
-                  <div class="text-h5 primary--text">Result Text</div>
-                  <div class="ws-preline" v-if="output_json?.output?.generic">
-                    <div class="primary lighten-5" v-for="item in output_json.output.generic" v-html="item.text"></div>
-                  </div>
-                </div>
-
-                </div>
-              </div>
-            </v-row>
-          </div> -->
 
         </v-container>
       </v-main>
@@ -311,8 +240,8 @@
             },
             body: JSON.stringify({
               "api":api,
-              "params":params}
-            )
+              "params":params
+            })
           });
           console.log("fetch end", res);
           if (!res.ok) {
@@ -367,6 +296,23 @@
           this.isLoading = false;
           this.showToast("全件 完了しました");
         },
+
+        async execAllTest_sync() {
+          console.log("[execAllTest_sync]");
+          this.isLoading = true;
+          this.all_progress = 0;
+
+          for (const item of this.import_jsons) {
+            if (item.question?.length > 0) {
+              await this.sendMessage(item);
+            }
+          }
+          console.log("[execAllTest_sync] All Done!");
+
+          this.isLoading = false;
+          this.showToast("全件 完了しました");
+        },
+
 
         // CSV File
         async onFileChange(file) {
